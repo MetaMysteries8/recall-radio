@@ -10,6 +10,7 @@ import {
   validateLyrics,
 } from "./core.js";
 import { deleteSong, listSongs, putSong } from "./library.js";
+import { callExa, checkedFacts, factRequest, parseSources } from "./search.js";
 
 const $ = (id) => document.getElementById(id);
 let apiKey = "",
@@ -19,6 +20,7 @@ let apiKey = "",
   controller = null,
   library = [];
 let audioPrice = null;
+let researchedFacts = [];
 const samples = {
   water:
     "Water freezes at 0 degrees Celsius.\nWater boils at 100 degrees Celsius.",
@@ -140,6 +142,7 @@ function showSong(song, blob) {
   $("empty").hidden = true;
   $("song").hidden = false;
   $("song-title").textContent = song.title;
+  renderSources(song.sources || []);
   $("lyrics").value = song.lyrics;
   $("receipt").textContent = song.textReceipt
     ? `Lyrics: ${TEXT_MODEL} · ${song.textReceipt.id} · ${song.textReceipt.tokens} tokens${song.demo ? " · Real generated sample" : ""}`
@@ -185,6 +188,9 @@ $("draft").addEventListener("click", () =>
         style,
         createdAt: new Date().toISOString(),
         textReceipt: { id: body.id, tokens: body.usage.total_tokens },
+        sources: researchedFacts.filter((item) =>
+          draft.facts.includes(item.fact),
+        ),
       },
       null,
     );
@@ -404,6 +410,125 @@ async function pricing() {
 }
 refreshLibrary();
 pricing();
+fetch("https://gen.pollinations.ai/mcp")
+  .then((response) => response.json())
+  .then((catalog) => {
+    const rates = catalog.data?.find((item) => item.id === "exa")?.pricing
+      ?.rates;
+    const search = Number(
+      rates?.find((rate) => rate.name === "exa.search.v1")?.price,
+    );
+    const page = Number(
+      rates?.find((rate) => rate.name === "exa.contents.text.v1")?.price,
+    );
+    if (Number.isFinite(search) && Number.isFinite(page))
+      $("search-price").textContent =
+        `Current Exa rates: ${search} Pollen per search plus a small text charge to propose facts; ${page} Pollen per full-page fetch. Uses your connected Pollinations key.`;
+  })
+  .catch(() => {});
+function renderSources(sources) {
+  const target = $("sources");
+  target.replaceChildren();
+  for (const source of sources) {
+    const p = document.createElement("p");
+    p.className = "hint";
+    const a = document.createElement("a");
+    a.href = source.sourceUrl;
+    a.target = "_blank";
+    a.rel = "noreferrer";
+    a.textContent = source.title;
+    p.append("Source: ", a);
+    target.append(p);
+  }
+}
+$("research").addEventListener("click", () =>
+  run(async () => {
+    const topic = $("topic").value.trim();
+    if (!topic || topic.length > 200)
+      throw Error("Enter a short topic, up to 200 characters.");
+    researchedFacts = [];
+    $("search-results").replaceChildren();
+    $("use-facts").hidden = true;
+    status(
+      "Searching with Exa… One paid search, then one small text request to propose cited facts.",
+    );
+    const text = await callExa(
+      apiKey,
+      "web_search_exa",
+      { query: topic, numResults: 3 },
+      controller.signal,
+    );
+    const sources = parseSources(text);
+    if (!sources.length)
+      throw Error(
+        "No usable source highlights found. Refine the topic or write your own notes.",
+      );
+    const response = await paid(
+      "/v1/chat/completions",
+      factRequest(topic, sources),
+    );
+    const factBody = await response.json();
+    researchedFacts = checkedFacts(factBody, sources);
+    const receipt = document.createElement("p");
+    receipt.className = "receipt";
+    receipt.textContent = `Exa: web_search_exa · Cited fact draft: ${factBody.id} · ${factBody.usage.total_tokens} tokens`;
+    $("search-results").append(receipt);
+    for (const item of researchedFacts) {
+      const card = document.createElement("div");
+      card.className = "source-card";
+      const fact = document.createElement("strong");
+      fact.textContent = item.fact;
+      const quote = document.createElement("p");
+      quote.textContent = `Supporting quote: “${item.quote}”`;
+      const link = document.createElement("a");
+      link.href = item.sourceUrl;
+      link.textContent = item.title;
+      link.target = "_blank";
+      link.rel = "noreferrer";
+      const read = document.createElement("button");
+      read.textContent = "Read full page · paid";
+      read.className = "read-source";
+      const full = document.createElement("pre");
+      full.hidden = true;
+      read.addEventListener("click", () =>
+        run(async () => {
+          if (full.textContent) {
+            full.hidden = !full.hidden;
+            read.textContent = full.hidden
+              ? "Show source text"
+              : "Hide source text";
+            status("Previously fetched source text. No new API request.");
+            return;
+          }
+          status("Fetching this source with Exa… One paid page fetch.");
+          full.textContent = await callExa(
+            apiKey,
+            "web_fetch_exa",
+            { urls: [item.sourceUrl], maxCharacters: 3000 },
+            controller.signal,
+          );
+          full.hidden = false;
+          read.textContent = "Hide source text";
+          status(
+            "Source text loaded. Check it before adding the proposed facts.",
+          );
+        }),
+      );
+      card.append(fact, quote, link, read, full);
+      $("search-results").append(card);
+    }
+    $("use-facts").hidden = false;
+    status(
+      "Proposed facts are ready. Check the quotes and source pages before adding them to your notes.",
+    );
+  }),
+);
+$("use-facts").addEventListener("click", () => {
+  $("notes").value = researchedFacts.map((item) => item.fact).join("\n");
+  status(
+    "Added the proposed facts to your notes. Review them before writing lyrics.",
+  );
+});
 window.addEventListener("pagehide", () => {
   apiKey = "";
   $("key").value = "";

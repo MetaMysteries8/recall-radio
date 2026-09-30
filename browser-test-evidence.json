@@ -3,6 +3,20 @@
   "testedBy": "Codex AI agent on behalf of MetaMysteries8",
   "environment": "Codex in-app browser, local static app",
   "measuredPollenCost": 0.04010875,
+  "exaTesting": {
+    "measuredPollenCost": 0.00854713,
+    "endpoint": "https://gen.pollinations.ai/mcp/exa",
+    "searchTool": "web_search_exa",
+    "query": "NASA Venus facts about its atmosphere and surface",
+    "requestedResults": 3,
+    "sources": ["https://science.nasa.gov/venus/", "https://nssdc.gsfc.nasa.gov/planetary/factsheet/venusfact.html"],
+    "fullPageTool": "web_fetch_exa",
+    "fetchedTextCharacters": 1955,
+    "citedLyricResponseId": "chatcmpl-ETqnI56UpxfedHaxS6SjRW5frittW",
+    "citedLyricTokens": 330,
+    "citationReferencesDisplayed": 3,
+    "testKeyCleared": true
+  },
   "liveGeneration": {
     "title": "Freeze & Boil (Study Song)",
     "notes": ["Water freezes at 0 degrees Celsius.", "Water boils at 100 degrees Celsius."],
