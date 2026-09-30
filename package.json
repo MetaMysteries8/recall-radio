@@ -1,0 +1,1 @@
+{"name":"recall-radio","private":true,"type":"module","scripts":{"test":"node --test core.test.js","dev":"python -m http.server 8767 --bind 127.0.0.1"}}

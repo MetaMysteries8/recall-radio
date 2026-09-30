@@ -1,0 +1,31 @@
+{
+  "title": "Sun-Song Planets",
+  "lyrics": "Mercury is the closest planet to the Sun.\nVenus is the hottest planet.\nEarth is the third planet from the Sun.\nHand claps, sing it—hum along, three bright facts in one small song.\nOh yeah!",
+  "facts": [
+    "Mercury is the closest planet to the Sun.",
+    "Venus is the hottest planet.",
+    "Earth is the third planet from the Sun."
+  ],
+  "quiz": [
+    {
+      "answer": "Mercury",
+      "factIndex": 0
+    },
+    {
+      "answer": "Venus",
+      "factIndex": 1
+    },
+    {
+      "answer": "third",
+      "factIndex": 2
+    }
+  ],
+  "id": "sample-planets",
+  "style": "pop",
+  "demo": true,
+  "createdAt": "2026-09-30T15:15:38.571Z",
+  "textReceipt": {
+    "id": "chatcmpl-ETqJpAhA9uOuUo02qAhWk54Y9NEuB",
+    "tokens": 305
+  }
+}

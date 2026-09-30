@@ -1,0 +1,25 @@
+{
+  "testedAt": "2026-09-30",
+  "testedBy": "Codex AI agent on behalf of MetaMysteries8",
+  "environment": "Codex in-app browser, local static app",
+  "measuredPollenCost": 0.04010875,
+  "liveGeneration": {
+    "title": "Freeze & Boil (Study Song)",
+    "notes": ["Water freezes at 0 degrees Celsius.", "Water boils at 100 degrees Celsius."],
+    "textResponseId": "chatcmpl-ETqPIueKHSoEPWJH7L7ABv33YHEyN",
+    "textTokens": 284,
+    "musicModel": "google/lyria-3-clip-preview",
+    "audioDurationSeconds": 29.622792,
+    "audioReadyState": 4
+  },
+  "checks": [
+    "Generation without a key was blocked.",
+    "Changing the factual value 100 to 10 disabled the music button.",
+    "Restoring the source fact enabled the music request.",
+    "Answers 0 and 10 scored 1 of 2; answers 0 and 100 scored 2 of 2.",
+    "The generated audio and notes were saved to IndexedDB.",
+    "After reloading, the saved audio remained playable with the same duration.",
+    "The key field was empty after reloading.",
+    "At a 390-pixel viewport, the studio used one column and page scroll width was 375 pixels; no horizontal overflow."
+  ]
+}
